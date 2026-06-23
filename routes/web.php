@@ -20,6 +20,14 @@ Route::get('products', [PageController::class, 'products'])->name('products');
 Route::get('booking-status', [PageController::class, 'bookingStatus'])->name('booking.status');
 Route::get('prices', [PageController::class, 'prices'])->name('prices');
 
+Route::get('/health', function () {
+    return response()->json([
+        'status' => 'ok',
+        'php' => phpversion(),
+        'app' => config('app.name')
+    ]);
+});
+
 Route::get('/geo/search', function (Request $request) {
 
     $query = $request->q;
