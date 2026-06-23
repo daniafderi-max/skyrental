@@ -34,7 +34,8 @@ class Booking extends Model
         'pickup_type',
         'jaminan_type',
         'lat',
-        'long'
+        'long',
+        'delivery_status'
     ];
 
     public static function generateBookingCode()

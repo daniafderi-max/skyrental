@@ -28,6 +28,11 @@ class BookingPage extends Component
     public $bookingToday;
     public $returnTodayCount;
 
+    public $pickup_type = 'pickup';
+    public $lat;
+    public $long;
+    public $address;
+
     public function mount()
     {
         $this->loadStats();
@@ -227,7 +232,8 @@ class BookingPage extends Component
     }
 
     #[On('close-modal')]
-    public function reRender() {
+    public function reRender()
+    {
         $this->revenueToday = Revenue::whereDate('created_at', now()->toDateString())->sum('amount');
     }
 

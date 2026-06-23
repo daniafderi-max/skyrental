@@ -46,6 +46,9 @@ class RentIphoneWizard extends Component
     public $payments;
     public $selectedPaymentId = 1;
     public $selectedPayment;
+    public $lat;
+    public $long;
+    public $pickup_type;
 
     // STEP 3
     public $sendWhatsapp = true;
@@ -85,7 +88,7 @@ class RentIphoneWizard extends Component
             default => [],
         };
     }
-    
+
     public function next(): void
     {
         $this->validate();
@@ -203,6 +206,16 @@ class RentIphoneWizard extends Component
             'requested_time' => 'required|date_format:H:i',
             'selectedDuration' => 'required|integer|min:1',
             'price' => 'required|numeric|min:0',
+            'pickup_type' => 'required|in:pickup,delivery',
+            'address' => $this->pickup_type === 'delivery'
+                ? 'required|string|min:10|max:255'
+                : 'required|string|min:10|max:255',
+            'lat' => $this->pickup_type === 'delivery'
+                ? 'required'
+                : 'nullabel',
+            'long' => $this->pickup_type === 'delivery'
+                ? 'required'
+                : 'nullabel',
         ]);
 
         $booking = Booking::create([
@@ -221,7 +234,9 @@ class RentIphoneWizard extends Component
             'booking_code' => Booking::generateBookingCode(),
             'payment_id' => $this->selectedPayment ? $this->selectedPayment->id : null,
             'address' => $this->address,
-            'pickup_type' => 'pickup',
+            'lat' => $this->lat,
+            'long' => $this->long,
+            'pickup_type' => $this->pickup_type,
             'jaminan_type' => $this->jaminan_type,
         ]);
 

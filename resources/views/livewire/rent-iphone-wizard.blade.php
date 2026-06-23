@@ -1,8 +1,52 @@
 <div class="max-w-7xl mx-auto p-6"
     x-on:display-duration-options.window="$dispatch('open-modal', 'duration-options-modal')" @close-modal="show = false"
     x-data="{
-        price: @entangle('selectedPrice').live,
-    }">
+    price: @entangle('selectedPrice').live,
+
+    // MAP + ADDRESS
+    address: @entangle('address'),
+    lat: @entangle('lat'),
+    lng: @entangle('long'),
+
+    type: @entangle('pickup_type').live,
+
+    addressLoading: false,
+    showSuggestions: false,
+    suggestions: [],
+
+    searchAddress() {
+        if (this.address.length < 3) return;
+
+        fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${this.address}`)
+            .then(res => res.json())
+            .then(data => {
+                this.suggestions = data;
+                this.showSuggestions = true;
+            });
+    },
+
+    selectAddress(item) {
+        this.address = item.display_name;
+        this.lat = item.lat;
+        this.lng = item.lon;
+
+        this.showSuggestions = false;
+
+        if (window.bookingMap?.map) {
+            window.bookingMap.map.setView([item.lat, item.lon], 16);
+
+            if (window.bookingMap.marker) {
+                window.bookingMap.map.removeLayer(window.bookingMap.marker);
+            }
+
+            window.bookingMap.marker = L.marker([item.lat, item.lon]).addTo(window.bookingMap.map);
+        }
+
+        $wire.set('address', item.display_name);
+        $wire.set('lat', item.lat);
+        $wire.set('long', item.lon);
+    }
+}">
     @if ($errors->any())
         <div x-data="{ show: true }" x-show="show" x-transition:enter="transition ease-out duration-300"
             x-transition:enter-start="opacity-0 translate-y-[-10px]" x-transition:enter-end="opacity-100 translate-y-0"
@@ -305,18 +349,80 @@
                         <span class="error">{{ $message }}</span>
                     @enderror
                 </div>
+                <div class="mb-3">
+    <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+        Tipe Pengambilan
+    </label>
+
+    <select wire:model.live="pickup_type"
+        class="w-full p-2.5 border rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-white">
+        <option value="pickup">Pickup (Ambil di tempat)</option>
+        <option value="delivery">Delivery (Diantar ke lokasi)</option>
+    </select>
+</div>
                 <div>
-                    <label for="customer_email"
-                        class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Alamat
-                        Customer</label>
-                    <input type="text" id="customer_email"
-                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                        placeholder="Jl. Diponegoro rt 001/rw 004" wire:model="address" />
-                    @error('address')
-                        <span class="error">{{ $message }}</span>
-                    @enderror
-                </div>
-                <div>
+                                <h1
+                                    class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+                                    Alamat
+                                </h1>
+                                <div class="relative">
+
+                                    <input type="text" x-model="address" @input.debounce.700ms="searchAddress"
+                                        @focus="showSuggestions = true" @click.outside="showSuggestions = false"
+                                        :disabled="type === 'pickup' || addressLoading"
+                                        class="w-full p-2 pr-10 rounded-xl border-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-700 placeholder-gray-400 focus:border-orange-500 focus:outline-none"
+                                        :placeholder="addressLoading
+                                            ?
+                                            'Mengambil alamat...' :
+                                            'e.g. Jl. Merdeka No.123'">
+
+                                    <!-- Spinner -->
+                                    <div x-show="addressLoading" x-transition
+                                        class="absolute right-3 top-1/2 -translate-y-1/2">
+
+                                        <svg class="animate-spin h-5 w-5 text-orange-500"
+                                            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10"
+                                                stroke="currentColor" stroke-width="4"></circle>
+
+                                            <path class="opacity-75" fill="currentColor"
+                                                d="M4 12a8 8 0 018-8v4 a4 4 0 00-4 4H4z"></path>
+                                        </svg>
+
+                                    </div>
+
+                                    <!-- Dropdown -->
+                                    <div x-show="showSuggestions && suggestions.length > 0" x-transition
+                                        class="absolute z-[999] w-full bg-white border rounded-xl shadow-lg mt-1 max-h-64 overflow-auto">
+
+                                        <template x-for="(item, index) in suggestions" :key="index">
+
+                                            <div @click="selectAddress(item)"
+                                                class="p-3 hover:bg-gray-100 cursor-pointer border-b">
+
+                                                <div class="font-medium text-sm" x-text="item.display_name"></div>
+
+                                            </div>
+
+                                        </template>
+
+                                    </div>
+
+                                </div>
+                            </div>
+                            @error('address')
+                                <span class="text-sm text-red-500">{{ $message }}</span>
+                            @enderror
+                            <div x-show="$wire.pickup_type === 'delivery'" x-transition class="mt-3">
+    <h1 class="text-lg font-medium mb-2">Pilih Lokasi Pengantaran</h1>
+
+    <div wire:ignore>
+        <div id="map" class="w-full h-64 rounded-xl border"></div>
+    </div>
+
+    <input type="hidden" wire:model="lat">
+    <input type="hidden" wire:model="long">
+</div>
                     <label for="customer_email"
                         class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Tipe
                         Jaminan</label>
@@ -695,3 +801,137 @@
         </div>
     </x-bottom-sheet>
 </div>
+
+<script>
+window.bookingMap = {
+    map: null,
+    marker: null
+};
+
+window.addEventListener('livewire:update', () => {
+    if (@this.get('pickup_type') === 'pickup') {
+        if (window.bookingMap.marker) {
+            window.bookingMap.map.removeLayer(window.bookingMap.marker);
+            window.bookingMap.marker = null;
+        }
+    }
+});
+
+async function initMap() {
+    if (window.bookingMap.map) return;
+
+    const map = L.map('map').setView([-8.219, 114.369], 13);
+
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; OpenStreetMap'
+    }).addTo(map);
+
+    window.bookingMap.map = map;
+
+    map.on('click', async function (e) {
+        const { lat, lng } = e.latlng;
+
+        // FIX AMAN
+        if (window.bookingMap.marker) {
+            map.removeLayer(window.bookingMap.marker);
+        }
+
+        window.bookingMap.marker = L.marker([lat, lng]).addTo(map);
+
+        @this.set('lat', lat);
+        @this.set('long', lng);
+
+        try {
+            const res = await fetch(`/geo/reverse?lat=${lat}&lon=${lng}`);
+            const data = await res.json();
+
+            if (data.display_name) {
+                @this.set('address', data.display_name);
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    });
+
+    setTimeout(() => {
+        map.invalidateSize();
+    }, 300);
+}
+
+function setMarker(lat, lng) {
+    const map = window.bookingMap.map;
+
+    if (!map) return;
+
+    if (window.bookingMap.marker) {
+        window.bookingMap.map.removeLayer(window.bookingMap.marker);
+    }
+
+    window.bookingMap.marker = L.marker([lat, lng], { draggable: true }).addTo(map);
+
+    window.bookingMap.marker.on('dragend', async function () {
+        const pos = window.bookingMap.marker.getLatLng();
+
+        const lat = pos.lat;
+        const lng = pos.lng;
+
+        const res = await fetch(`/geo/reverse?lat=${lat}&lon=${lng}`);
+        const data = await res.json();
+
+        if (data.display_name) {
+            @this.set('address', data.display_name);
+            @this.set('lat', lat);
+            @this.set('long', lng);
+        }
+    });
+}
+
+async function detectCurrentLocation() {
+
+    if (!navigator.geolocation) return;
+
+    navigator.geolocation.getCurrentPosition(async (position) => {
+
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+
+        map.setView([lat, lng], 16);
+        setMarker(lat, lng);
+
+        try {
+            const res = await fetch(`/geo/reverse?lat=${lat}&lon=${lng}`);
+            const data = await res.json();
+
+            if (data.display_name) {
+                @this.set('address', data.display_name);
+                @this.set('lat', lat);
+                @this.set('long', lng);
+            }
+
+        } catch (err) {
+            console.error(err);
+        }
+
+    });
+}
+
+// LIVEWIRE HOOK
+document.addEventListener('livewire:init', () => {
+    waitForMap();
+});
+
+document.addEventListener('livewire:navigated', () => {
+    waitForMap();
+});
+
+function waitForMap() {
+    const check = setInterval(() => {
+        const el = document.getElementById('map');
+
+        if (el && !window.bookingMap.map) {
+            clearInterval(check);
+            initMap();
+        }
+    }, 300);
+}
+</script>

@@ -747,13 +747,7 @@ $watch('selectedMinute', () => selectedDateFormatted = formatDate(selectedDate))
                                     <input type="text" x-model="address" @input.debounce.700ms="searchAddress"
                                         @focus="showSuggestions = true" @click.outside="showSuggestions = false"
                                         :disabled="type === 'pickup' || addressLoading"
-                                        class="w-full p-2 pr-10 rounded-xl border-2
-               bg-white dark:bg-gray-900
-               text-gray-900 dark:text-gray-100
-               border-gray-300 dark:border-gray-700
-               placeholder-gray-400
-               focus:border-orange-500
-               focus:outline-none"
+                                        class="w-full p-2 pr-10 rounded-xl border-2 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-700 placeholder-gray-400 focus:border-orange-500 focus:outline-none"
                                         :placeholder="addressLoading
                                             ?
                                             'Mengambil alamat...' :
@@ -768,8 +762,8 @@ $watch('selectedMinute', () => selectedDateFormatted = formatDate(selectedDate))
                                             <circle class="opacity-25" cx="12" cy="12" r="10"
                                                 stroke="currentColor" stroke-width="4"></circle>
 
-                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4
-                   a4 4 0 00-4 4H4z"></path>
+                                            <path class="opacity-75" fill="currentColor"
+                                                d="M4 12a8 8 0 018-8v4 a4 4 0 00-4 4H4z"></path>
                                         </svg>
 
                                     </div>

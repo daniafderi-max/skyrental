@@ -40,7 +40,7 @@
         <x-slot name="addBtn">
             <x-tables.addbtn class="p-2 bg-orange-500 text-white" @click="iPhoneWizardtest()">Booking
                 baru</x-tables.addbtn>
-            <a wire:navigate href="{{ route('booking.delivery') }}">test</a>
+            <a wire:navigate class="flex items-center justify-center w-1/2 px-5 py-2 text-sm tracking-wide text-white transition-colors duration-200 bg-blue-500 rounded-lg shrink-0 sm:w-auto gap-x-2 hover:bg-blue-600 dark:hover:bg-blue-500 dark:bg-blue-600 p-2 bg-blue-500 text-white" href="{{ route('booking.delivery') }}">Delivery List</a>
             {{-- <x-tables.addbtn type="button" x-data="" @click="createBooking()">
                 Add Booking
             </x-tables.addbtn> --}}
