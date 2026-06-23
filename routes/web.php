@@ -20,12 +20,12 @@ Route::get('products', [PageController::class, 'products'])->name('products');
 Route::get('booking-status', [PageController::class, 'bookingStatus'])->name('booking.status');
 Route::get('prices', [PageController::class, 'prices'])->name('prices');
 
-Route::get('/health', function () {
-    return response()->json([
-        'status' => 'ok',
-        'php' => phpversion(),
-        'app' => config('app.name')
-    ]);
+Route::get('/db-check', function () {
+    return [
+        'DB_CONNECTION' => env('DB_CONNECTION'),
+        'DB_HOST' => env('DB_HOST'),
+        'DB_DATABASE' => env('DB_DATABASE'),
+    ];
 });
 
 Route::get('/geo/search', function (Request $request) {
